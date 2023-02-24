@@ -1,4 +1,4 @@
-// UI Components
+// UI Component
 const Header = () => {
     return (
         <div id="header">
