@@ -9,40 +9,66 @@ const Header = () => {
     );
 }
 
-class Dropdown extends React.Component {
+class CountryAndStateDropdown extends React.Component {
 
+    //initialize states
     state = {
         countries: [],
-        selected: []
+        states: [],
+        selected: null
     }
 
     //When component mounts, fetch data from API and set state to data
     componentDidMount(){
 
-        if (this.props.fetchUrl){
-
-            fetch(this.props.fetchUrl)
-            .then(response => response.json())
-            .then(data => {
-                this.setState({countries: data});
-            });
-
-        }
+        fetch('https://xc-countries-api.fly.dev/api/countries/')
+        .then(response => response.json())
+        .then(data => {
+            this.setState({countries: data});
+        });
 
     }
 
     //When component updates, fetch data from API and set state to data
-    
+    componentDidUpdate(prevState){
+        
+        // if the selected country has changed, use the new country code to fetch the states
+        if(prevState.selected !== this.state.selected){
+            fetch(`https://xc-countries-api.fly.dev/api/countries/${this.state.selected}/states`)
+            .then(response => response.json())
+            .then(data => {
+                this.setState({states: data});
+            });
+        }
+    }
+
+    //When country dropdown changes, update state
+    handleCountryChange = (event) => {
+        this.setState({
+            selected: event.target.value 
+        });
+    }
 
     render(){
         return(
                 <div>
-                    <label for={this.props.id + "-dropdown"}>{this.props.label}</label>
-                    <select id={this.props.id + "-dropdown"} name={this.props.id}>
-                        <option value="" selected disabled>{this.props.textContent}</option>  
+                    {/* Country Dropdown */}
+                    <label for="country-dropdown">Country: </label>
+                    <select id={"country-dropdown"} name="country-dropwdown" onChange={this.handleCountryChange}>
+                        <option value="" selected disabled>Select a country</option>  
                         {/* Countries List */}
                         {this.state.countries.map((country) => {
                             return <option value={country.code}>{country.name}</option>
+                        })}
+                    </select>
+
+                    {/* State Dropdown */}
+                    <label for="state-dropdown">Country: </label>
+                    <select id={"state-dropdown"} name="state-dropwdown">
+                        <option value="" selected disabled>Select a state</option>  
+                        {/* States List */}
+                        {this.state.states.map((state) => {
+                            return <option value={state.code}>{state.name}</option>
                         })}
                     </select>
                 </div>
@@ -105,8 +131,7 @@ class App extends React.Component {
         return (
             <div className="container">
                 <Header />
-                <Dropdown id="country" textContent="Select A Country" label="Country: " fetchUrl="https://xc-countries-api.fly.dev/api/countries/" />
-                <Dropdown id="state" textContent="Select A State" label="State: " />
+                <CountryAndStateDropdown />
                 <NewCountryForm />
                 <NewStateForm />
             </div>
