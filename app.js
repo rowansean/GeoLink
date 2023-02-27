@@ -9,48 +9,51 @@ const Header = () => {
     );
 }
 
-const Dropdown = (props) => {
+class Dropdown extends React.Component {
 
-    const [content, setContent] = React.useState([]);
-    const optionList = [];
+    state = {
+        countries: [],
+        selected: []
+    }
 
-    React.useEffect(() => {
-        fetchCountries(props.url).then(data => {
-            setContent(data);
-        });
-    }, []);
+    //When component mounts, fetch data from API and set state to data
+    componentDidMount(){
 
+        if (this.props.fetchUrl){
+
+            fetch(this.props.fetchUrl)
+            .then(response => response.json())
+            .then(data => {
+                this.setState({countries: data});
+            });
+
+        }
+
+    }
+
+    //When component updates, fetch data from API and set state to data
     
+
+    render(){
+        return(
+                <div>
+                    <label for={this.props.id + "-dropdown"}>{this.props.label}</label>
+                    <select id={this.props.id + "-dropdown"} name={this.props.id}>
+                        <option value="" selected disabled>{this.props.textContent}</option>  
+                        {/* Countries List */}
+                        {this.state.countries.map((country) => {
+                            return <option value={country.code}>{country.name}</option>
+                        })}
+                    </select>
+                </div>
+            );
+    }
     
-    content.map(country => {
-        optionList.push(<option value={country.name} key={country.id}>{country.name}</option>);
-    });
-
-
-    return(
-        <div>
-            <label for={props.for + "-dropdown"}>{props.for + ":"}</label>
-            <select id={props.for + "-dropdown"} name={props.for}>
-                <option value="" selected disabled>Select a {props.for}</option>
-                {optionList}
-            </select>
-        </div>
-    );
-}
-
-const SelectCountryAndState = (props) => {
-    
-    return (
-        <div id="select-country-and-state">
-            <Dropdown for="country" url="https://xc-countries-api.fly.dev/api/countries/" />
-            <Dropdown for="state" url={"https://xc-countries-api.fly.dev/api/countries/AU/states/"}/>
-        </div>
-    );
 }
 
 const NewCountryForm = () => {
     return (
-        <form id="add-new-country">
+        <div id="add-new-country">
                 <h2>Add a New Country</h2>
 
                 <label for="newCountryName">Country name:</label>
@@ -60,14 +63,14 @@ const NewCountryForm = () => {
                 <input type="text" id="newCountryCode" name="newCountryCode" minlength="2" maxlength="3"/>
 
                 <label for="submit-country"></label>
-                <button type="submit" id="submit-country">Submit</button>
-        </form>
+                <button id="submit-country">Submit</button>
+        </div>
     );
 }
 
 const NewStateForm = () => {
     return (
-        <form id="add-new-state">
+        <div id="add-new-state">
             <h2>Add a New State</h2>
 
             <label for="newStateName">State name:</label>
@@ -82,30 +85,35 @@ const NewStateForm = () => {
             </select>
 
             <label for="submit-state"></label>
-            <button type="submit" id="submit-state">Submit</button>
-        </form>
-    );
-}
-
-// API Calls
-const fetchCountries = async (url) => {
-    var response = await fetch(url);
-    var data = await response.json();
-    // console.log(data);
-    return data;
-}
-
-// Main App Component
-const App = () => {
-
-    return (
-        <div className="container">
-            <Header />
-            <SelectCountryAndState />
-            <NewCountryForm />
-            <NewStateForm />
+            <button id="submit-state">Submit</button>
         </div>
     );
+}
+
+
+
+
+// Main App Component
+class App extends React.Component {
+
+    //pass list of countries to dropdown
+    // https://xc-countries-api.fly.dev/api/countries/
+    // https://xc-countries-api.fly.dev/api/countries/US/states
+
+
+    render(){
+        return (
+            <div className="container">
+                <Header />
+                <Dropdown id="country" textContent="Select A Country" label="Country: " fetchUrl="https://xc-countries-api.fly.dev/api/countries/" />
+                <Dropdown id="state" textContent="Select A State" label="State: " />
+                <NewCountryForm />
+                <NewStateForm />
+            </div>
+        );
+    }
+
+
 }
 
 // Render App
