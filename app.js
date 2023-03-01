@@ -1,115 +1,105 @@
 // UI Components
-const Header = () => {
+const Header = (props) => {
+
+    // Props: title, subtitle
+
     return (
         <div id="header">
-            <h1>Countries and States...in React</h1>
-            <p>An onboarding project developed by Sean Rowan</p>
+            <h1>{props.title}</h1>
+            <p>{props.subtitle}</p>
             <hr/>
         </div>
     );
 }
 
-class SelectCountryAndStateContainer extends React.Component {
+const Dropdown = (props) => {
 
-    state = {
-        states: [],
-        selectedCountryCode: null
-    }
+    // Props: id, label, defaultText, list, valueField, onChange
 
-    //When component updates, fetch data from API and set state to data
-    componentDidUpdate(prevState){
-        
-        // if the selected country has changed, use the new country code to fetch the states
-        if(prevState.selectedCountryCode !== this.state.selectedCountryCode){
-            fetch(`https://xc-countries-api.fly.dev/api/countries/${this.state.selectedCountryCode}/states`)
+    return(
+        <div>
+            <label for={props.id}>{props.label}</label>
+            <select id={props.id} onChange={props.onChange}>
+                <option value="" selected disabled>{props.defaultText}</option>  
+                {/* Generate Option List */}
+                {props.list.map((listItem) => {
+                    // for value, specify which data should be used by using valueField prop
+                    return <option value={listItem[props.valueField]}>{listItem.name}</option>
+                })}
+            </select>
+        </div>
+    );
+
+}
+
+// Container Components
+const SelectCountryAndStateContainer = (props) => {
+
+    const [states, setStates] = React.useState([]);
+    const [selectedCountryCode, setSelectedCountryCode] = React.useState(null);
+
+    //When selectedCountryCode updates, fetch data from API and set state to data
+    React.useEffect(() => {
+
+            fetch(`https://xc-countries-api.fly.dev/api/countries/${selectedCountryCode}/states`)
             .then(response => response.json())
             .then(data => {
                 data.sort((a, b) => (a.name > b.name) ? 1 : -1);
-                this.setState({states: data});
+                setStates(data);
             });
-        }
-    }
+
+    }, [selectedCountryCode]);
 
     //When country dropdown changes, update state
-    handleCountryChange = (event) => {
-        this.setState({
-            selectedCountryCode: event.target.value
-        });
+    const handleCountryChange = (event) => {
+        setSelectedCountryCode(event.target.value);
     }
 
-    render(){
-        return(
-                <div>
-                    <CountryDropdown countries={this.props.countries} handleCountryChange={this.handleCountryChange} />
-                    <StateDropdown states={this.state.states}/> 
-                </div>
-            );
-    }
-    
-}
-
-const CountryDropdown = (props) => {
-
-    return(
-        <div>
-            <label for={props.id}>Country: </label>
-            <select id={props.id} name={props.id} onChange={props.handleCountryChange}>
-                <option value="" selected disabled>Select a country</option>  
-                {/* Countries List */}
-                {props.countries.map((country) => {
-                    return <option data-countryid={country.id} value={country.code}>{country.name}</option>
-                })}
-            </select>
-        </div>
+    return (
+            <div>
+                <Dropdown 
+                    id="country-dropdown" 
+                    label="Country:" 
+                    defaultText="Select a country"
+                    list={props.countries} 
+                    valueField="code" 
+                    onChange={handleCountryChange}
+                />
+                <Dropdown 
+                    id="state-dropdown"
+                    label="State:"
+                    defaultText="Select a state"
+                    list={states}
+                    valueField="code"
+                />
+            </div>
     );
     
 }
 
-const StateDropdown = (props) => {
-
-    return(
-        <div>
-            <label for="state-dropdown">State: </label>
-            <select id={"state-dropdown"} name="state-dropwdown">
-                <option value="" selected disabled>Select a state</option>  
-                {/* States List */}
-                {props.states.map((state) => {
-                    return <option value={state.code}>{state.name}</option>
-                })}
-            </select>
-        </div>
-    );
-
-}
-
-class NewCountryForm extends React.Component {
+const NewCountryForm = (props) => {
    
-   state = {
-        newCountryName: '',
-        newCountryCode: ''
+
+    const [newCountryName, setNewCountryName] = React.useState('');
+    const [newCountryCode, setNewCountryCode] = React.useState('');
+
+    const handleCountryNameChange = (event) => {
+        setNewCountryName(event.target.value);
     }
 
-    handleCountryNameChange = (event) => {
-        this.setState({
-            newCountryName: event.target.value
-        });
+    const handleCountryCodeChange = (event) => {
+        setNewCountryCode(event.target.value);
     }
 
-    handleCountryCodeChange = (event) => {
-        this.setState({
-            newCountryCode: event.target.value
-        });
-    }
-
-    sendData = () => {
+    const sendData = () => {
         fetch('https://xc-countries-api.fly.dev/api/countries/', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                code: this.state.newCountryCode,
-                name: this.state.newCountryName
+                code: newCountryCode,
+                name: newCountryName
             })
         })
         .then(response => response.json())
@@ -123,66 +113,54 @@ class NewCountryForm extends React.Component {
         
     }
 
-    render(){
+    return (
+        <div id="add-new-country">
+                <h2>Add a New Country</h2>
 
-        return (
-            <div id="add-new-country">
-                    <h2>Add a New Country</h2>
+                <label for="newCountryName">Country name:</label>
+                <input type="text" id="newCountryName" name="newCountryName" minlength="4" onChange={handleCountryNameChange}/>
 
-                    <label for="newCountryName">Country name:</label>
-                    <input type="text" id="newCountryName" name="newCountryName" minlength="4" onChange={this.handleCountryNameChange}/>
+                <label for="newCountryCode">Country code:</label>
+                <input type="text" id="newCountryCode" name="newCountryCode" minlength="2" maxlength="3" onChange={handleCountryCodeChange}/>
 
-                    <label for="newCountryCode">Country code:</label>
-                    <input type="text" id="newCountryCode" name="newCountryCode" minlength="2" maxlength="3" onChange={this.handleCountryCodeChange}/>
+                <label for="submit-country"></label>
+                <button id="submit-country" onClick={sendData}>Submit</button>
+        </div>
+    );
 
-                    <label for="submit-country"></label>
-                    <button id="submit-country" onClick={this.sendData}>Submit</button>
-            </div>
-        );
-
-    }
 }
 
-class NewStateForm extends React.Component {
+const NewStateForm = (props) => {
     
-    state = {
-        newStateName: '',
-        newStateCode: '',
-        countryID: null
-    }
+    const [newStateName, setNewStateName] = React.useState('');
+    const [newStateCode, setNewStateCode] = React.useState('');
+    const [countryID, setCountryId] = React.useState(null);
 
     //When country dropdown changes, update state
-    handleCountryChange = (event) => {
-        this.setState({
-            // set the countryID from the custom 'data-countryid' attribute of the option element and update state
-            countryID: event.target.options[event.target.selectedIndex].getAttribute('data-countryid')
-        });
+    const handleCountryChange = (event) => {
+        setCountryId(event.target.value);
     }
 
     // When state name changes, update state
-    handleStateNameChange = (event) => {
-        this.setState({
-            newStateName: event.target.value
-        });
+    const handleStateNameChange = (event) => {   
+        setNewStateName(event.target.value);
     }
 
     // When state code changes, update state
-    handleStateCodeChange = (event) => {
-        this.setState({
-            newStateCode: event.target.value
-        });
+    const handleStateCodeChange = (event) => {
+        setNewStateCode(event.target.value);
     }
 
-    sendData = () => {
+    const sendData = () => {
         fetch(`https://xc-countries-api.fly.dev/api/states/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                code: this.state.newStateCode,
-                name: this.state.newStateName,
-                countryId: this.state.countryID
+                code: newStateCode,
+                name: newStateName,
+                countryId: countryID
             })
         })
         .then(response => response.json())
@@ -195,58 +173,61 @@ class NewStateForm extends React.Component {
         document.getElementById("newStateCode").value = "";
     }
 
-    render(){
-        return (
-            <div id="add-new-state">
-                <h2>Add a New State</h2>
+    return (
+        <div id="add-new-state">
+            <h2>Add a New State</h2>
 
-                <label for="newStateName">State name:</label>
-                <input type="text" id="newStateName" name="newStateName" minlength="4" onChange={this.handleStateNameChange} />
+            <label for="newStateName">State name:</label>
+            <input type="text" id="newStateName" name="newStateName" minlength="4" onChange={handleStateNameChange} />
 
-                <label for="newStateCode">State Code:</label>
-                <input type="text" id="newStateCode" name="newStateCode" minlength="2" maxlength="3" onChange={this.handleStateCodeChange} />
+            <label for="newStateCode">State Code:</label>
+            <input type="text" id="newStateCode" name="newStateCode" minlength="2" maxlength="3" onChange={handleStateCodeChange} />
 
-                <CountryDropdown countries={this.props.countries} handleCountryChange={this.handleCountryChange} />
+            <Dropdown 
+                id="country-dropdown-addnewstateform"
+                label="Country:"
+                defaultText="Select a country"
+                list={props.countries}
+                valueField="id"
+                onChange={handleCountryChange}
+            />
 
-                <label for="submit-state"></label>
-                <button id="submit-state" onClick={this.sendData}>Submit</button>
-            </div>
-        );
-    }
+            <label for="submit-state"></label>
+            <button id="submit-state" onClick={sendData}>Submit</button>
+        </div>
+    );
 
 }
 
 // Main App Component
-class App extends React.Component {
+const App = () => {
 
     //initialize states for countries, states, and selected options
-    state = {
-        countries: []
-    }
+    const [countries, setCountries] = React.useState([]);
 
     //When component mounts, fetch data from API and set state to Json data
-    componentDidMount(){
+    React.useEffect(() => {
 
         fetch('https://xc-countries-api.fly.dev/api/countries/')
         .then(response => response.json())
         .then(data => {
             data.sort((a, b) => (a.name > b.name) ? 1 : -1);
-            this.setState({countries: data});
+            setCountries(data);
         });
 
-    }
+    }, []);
 
-    render(){
-        return (
-            <div className="container">
-                <Header />
-                <SelectCountryAndStateContainer countries={this.state.countries} />
-                <NewCountryForm />
-                <NewStateForm countries={this.state.countries} />
-            </div>
-        );
-    }
-
+    return (
+        <div className="container">
+            <Header 
+                title="Countries and States Project...in React!"
+                subtitle="An exercise using React, API calls, and state management. Developed by Sean Rowan"
+            />
+            <SelectCountryAndStateContainer countries={countries} />
+            <NewCountryForm />
+            <NewStateForm countries={countries} />
+        </div>
+    );
 
 }
 
