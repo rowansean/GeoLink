@@ -23,9 +23,9 @@ const Dropdown = (props) => {
             <select id={props.id} onChange={props.onChange}>
                 <option value="" selected disabled>{props.defaultText}</option>  
                 {/* Generate Option List */}
-                {props.list.map((listItem) => {
+                {props.list.map((listItem, i) => {
                     // for value, specify which data should be used by using valueField prop
-                    return <option value={listItem[props.valueField]}>{listItem.name}</option>
+                    return <option key={i} value={listItem[props.valueField]}>{listItem.name}</option>
                 })}
             </select>
         </div>
@@ -40,7 +40,7 @@ const TextInput = (props) => {
     return (
         <div>
             <label htmlFor={props.id}>{props.label}</label>
-            <input type="text" id={props.id} name={props.id} minlength={props.minlength} maxlength={props.maxlength} onChange={props.onChange}/>
+            <input type="text" id={props.id} name={props.id} minLength={props.minlength} maxLength={props.maxlength} onChange={props.onChange}/>
         </div>
     );
 }
