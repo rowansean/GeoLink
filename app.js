@@ -40,12 +40,16 @@ const TextInput = (props) => {
     return (
         <div>
             <label htmlFor={props.id}>{props.label}</label>
-            <input type="text" id={props.id} name={props.id} minLength={props.minlength} maxLength={props.maxlength} onChange={props.onChange}/>
+            <input type="text" id={props.id} value={props.value} minLength={props.minlength} maxLength={props.maxlength} onChange={props.onChange}/>
         </div>
     );
 }
 
 const SubmitButton = (props) => {
+
+    // Post Data to API
+    // Refresh Country List and State List
+
 
     return(
         <div>
@@ -58,22 +62,6 @@ const SubmitButton = (props) => {
 // Container Components
 const SelectCountryAndStateForm = (props) => {
 
-    // Props: countries
-    // State: selectedCountryCode, currentCountryStates
-
-    const [selectedCountryCode, setSelectedCountryCode] = React.useState(null);
-    const [currentCountryStates, setCurrentCountryStates] = React.useState([]);
-
-    // Lifecycle Methods
-    const getCurrentCountryStates = () => {
-        fetch(`http://127.0.0.1:8000/api/countries/${selectedCountryCode}/states`)
-            .then(response => response.json())
-            .then(data => {
-                data.sort((a, b) => (a.name > b.name) ? 1 : -1);
-                setCurrentCountryStates(data);
-            });
-    }
-
     return (
             <div>
                 <Dropdown 
@@ -82,13 +70,16 @@ const SelectCountryAndStateForm = (props) => {
                     defaultText="Select a country"
                     list={props.countries} 
                     valueField="code" 
-                    onChange={handleCountryCodeChange}
+                    onChange={(event) => {
+                        props.setCurrentCountryCode(event.target.value);
+                        props.refreshStates(event.target.value);
+                    }}
                 />
                 <Dropdown 
                     id="state-dropdown"
                     label="State:"
                     defaultText="Select a state"
-                    list={currentCountryStates}
+                    list={props.currentStates}
                     valueField="code"
                 />
             </div>
@@ -104,28 +95,20 @@ const NewCountryForm = (props) => {
     const [newCountryName, setNewCountryName] = React.useState('');
     const [newCountryCode, setNewCountryCode] = React.useState('');
 
-    // Event Handlers
-    const handleCountryNameChange = (event) => {
-        // Sets the new country name to the value of the input field upon any changes
-        setNewCountryName(event.target.value);
-    }
-
-    const handleCountryCodeChange = (event) => {
-        // Sets the new country code to the value of the input field upon any changes
-        setNewCountryCode(event.target.value);
+    const resetState = () => {
+        setNewCountryName('');
+        setNewCountryCode('');
     }
 
     const handleSubmit = async () => {
 
         /**
-         * Creates a new country object with the new country name and code,
-         * and sends a POST request to the API to create the new country.
+         * Sends a POST request to the API to create the new country.
          * 
          * After submitting, the form will clear 
          * and the user will be alerted of the success or failure of the request
          */
-
-        fetch('http://127.0.0.1:8000/api/countries/', { 
+        var response = await fetch('http://127.0.0.1:8000/api/countries/', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -135,23 +118,14 @@ const NewCountryForm = (props) => {
                 name: newCountryName
             })
         })
-        .then(response => {
-            if (response.ok){
-                alert("Country successfully added!");
-            } else {
-                alert("Country could not be added. Please try again.");
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-        });
-
-        //clear form after submission
-        document.getElementById("newCountryName").value = "";
-        document.getElementById("newCountryCode").value = "";
-        await new Promise(r => setTimeout(r, 1500)); // wait 1.5 seconds before updating the list of countries
-        props.getAllCountries();
+        if (response.ok){
+            alert("Country successfully added!");
+            props.refreshCountries();
+            resetState();
+        } else {
+            alert("Country could not be added. Please try again.");
+        }
+        console.log(await response.json());
     }
 
     // Render
@@ -162,14 +136,20 @@ const NewCountryForm = (props) => {
                     id="newCountryName"
                     label="Country name:"
                     minlength="4"
-                    onChange={handleCountryNameChange}
+                    value={newCountryName}
+                    onChange={(event) => {
+                        setNewCountryName(event.target.value);
+                    }}
                 />
                 <TextInput 
                     id="newCountryCode"
                     label="Country code:"
                     minlength="2"
                     maxlength="3"
-                    onChange={handleCountryCodeChange}
+                    value={newCountryCode}
+                    onChange={(event) => {
+                        setNewCountryCode(event.target.value);
+                    }}
                 />
                 <SubmitButton 
                     id="submit-country"
@@ -190,27 +170,15 @@ const NewStateForm = (props) => {
     const [newStateCode, setNewStateCode] = React.useState('');
     const [countryID, setCountryId] = React.useState(null);
 
-    //When country dropdown changes, update state
-    const handleCountryChange = (event) => {
-        setCountryId(event.target.value);
-    }
-
-    // When state name changes, update state
-    const handleStateNameChange = (event) => {   
-        setNewStateName(event.target.value);
-    }
-
-    // When state code changes, update state
-    const handleStateCodeChange = (event) => {
-        setNewStateCode(event.target.value);
+    const resetState = () => {
+        setNewStateName('');
+        setNewStateCode('');
+        setCountryId(null);
     }
 
     const handleSubmit = async () => {
 
-        const local = 'http://127.0.0.1:8000/api/states/';
-        const live = 'https://xc-countries-api.fly.dev/api/states/';
-
-        fetch(local, {
+        var response = await fetch('http://127.0.0.1:8000/api/states/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -221,38 +189,40 @@ const NewStateForm = (props) => {
                 countryId: countryID
             })
         })
-        .then(response => {
-            if (response.ok){
-                alert("State successfully added!");
-            } else {
-                alert("State could not be added. Please try again.");
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-        });
+        if (response.ok){
+            alert("State successfully added!");
+            props.refreshStates(props.currentCountryCode);
+            resetState();
+            
+        } else {
+            alert("State could not be added. Please try again.");
+            console.log(await response.json());
+        }
 
-        //clear form after submission
-        document.getElementById("newStateName").value = "";
-        document.getElementById("newStateCode").value = "";
     }
 
     return (
         <div id="add-new-state">
+
             <h2>Add a New State</h2>
             <TextInput 
                 id="newStateName"
                 label="State name:"
                 minlength="4"
-                onChange={handleStateNameChange}
+                value={newStateName}
+                onChange={(event) => {   
+                    setNewStateName(event.target.value);
+                }}
             />
             <TextInput 
                 id="newStateCode"
                 label="State code:"
                 minlength="2"
                 maxlength="3"
-                onChange={handleStateCodeChange}
+                value={newStateCode}
+                onChange={(event) => {
+                    setNewStateCode(event.target.value);            
+                }}
             />
             <Dropdown 
                 id="country-dropdown-addnewstateform"
@@ -260,41 +230,63 @@ const NewStateForm = (props) => {
                 defaultText="Select a country"
                 list={props.countries}
                 valueField="id"
-                onChange={handleCountryChange}
+                value={countryID}
+                onChange={(event) => {
+                    setCountryId(event.target.value);
+                 }}
             />
             <SubmitButton 
                 id="submit-state"
                 buttonText="Submit"
                 onClick={handleSubmit}
             />
+
         </div>
     );
 
 }
 
+
 // Main App Component
 const App = () => {
 
     const [allCountries, setAllCountries] = React.useState([]);
+    const [currentCountryCode, setCurrentCountryCode] = React.useState(null);
+    const [currentStates, setCurrentStates] = React.useState([]);
+
 
     React.useEffect(() => {
         //When component mounts, update list of all countries
-        getAllCountries();
+        refreshCountries();
     }, []);
 
-    const getAllCountries = () => {
+    const refreshCountries = async () => {
         /* 
             Fetches a list of countries from the API 
             and sets the 'AllCountries' state to the returned data
         */
-        fetch('http://127.0.0.1:8000/api/countries/')
-        .then(response => response.json())
-        .then(data => {
-            // if data equals allCountries, try to fetch again
+        var response = await fetch('http://127.0.0.1:8000/api/countries/');
+        var data = await response.json();
+        if (response.ok){
             data.sort((a, b) => (a.name > b.name) ? 1 : -1);
             setAllCountries(data);
-        })
+            console.log("All countries updated!");
+        } else {
+            console.log("Error fetching countries");
+            console.log(data);
+        }
         
+    }
+
+    const refreshStates = async (countryCode) => {
+        var response = await fetch(`http://127.0.0.1:8000/api/countries/${countryCode}/states`);
+            if (response.ok){
+                var data = await response.json();
+                data.sort((a, b) => (a.name > b.name) ? 1 : -1);
+                setCurrentStates(data);
+            } else {
+                alert("Could not retrieve states for selected country. Please try again.");
+            }
     }
 
     return (
@@ -304,13 +296,18 @@ const App = () => {
                 subtitle="An exercise using React, API calls, and state management. Developed by Sean Rowan"
             />
             <SelectCountryAndStateForm 
-                countries={allCountries} 
+                countries={allCountries}
+                currentStates={currentStates}
+                refreshStates={refreshStates}
+                setCurrentCountryCode={setCurrentCountryCode}
             />
             <NewCountryForm 
-                getAllCountries={getAllCountries}
+                refreshCountries={refreshCountries}
             />
             <NewStateForm 
                 countries={allCountries}
+                currentCountryCode={currentCountryCode}
+                refreshStates={refreshStates}
             />
         </div>
     );
