@@ -64,35 +64,14 @@ const SelectCountryAndStateForm = (props) => {
     const [selectedCountryCode, setSelectedCountryCode] = React.useState(null);
     const [currentCountryStates, setCurrentCountryStates] = React.useState([]);
 
-    // Event Handlers
-    const handleCountryCodeChange = (event) => {
-        /**
-         * Meant to be used as an event handler for a dropdown
-         * Sets the 'selectedCountryCode' state to the value of the dropdown
-         */
-        setSelectedCountryCode(event.target.value);
-    }
-
     // Lifecycle Methods
     const getCurrentCountryStates = () => {
-        /*
-            Fetches a list of states for the current selected country from the API
-            and sets the 'currentCountryStates' state to the returned data
-        */
         fetch(`http://127.0.0.1:8000/api/countries/${selectedCountryCode}/states`)
             .then(response => response.json())
             .then(data => {
                 data.sort((a, b) => (a.name > b.name) ? 1 : -1);
                 setCurrentCountryStates(data);
             });
-    }
-
-    if (selectedCountryCode != null && selectedCountryCode != '') {
-        /**
-         * Populate the correct list of states for the currently selected country.
-         * If the selected country is null or the default value of "", then the list of states should be empty.
-         */
-        getCurrentCountryStates();
     }
 
     return (
