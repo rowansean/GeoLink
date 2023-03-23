@@ -1,7 +1,7 @@
 # Countries and States
 This project is a single-page website that allows the user to interact with an external REST API to get data about countries and states. The website is built using HTML, CSS, and JavaScript.
 
-![UI]( https://github.com/SeanTheDev/Countries-and-States/blob/main/UI.png?raw=true)
+![UI]( https://github.com/SeanTheDev/CountriesAndStates-React/blob/main/UI.png?raw=true)
 <hr>
 
 ## Features
