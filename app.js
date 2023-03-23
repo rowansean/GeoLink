@@ -5,10 +5,11 @@ const Header = (props) => {
     // Props: title, subtitle
 
     return (
-        <div id="header">
-            <h1>{props.title}</h1>
-            <p>{props.subtitle}</p>
-            <hr/>
+        <div className="header object-fit-fill">
+            <div className="navbar text-bg-primary p-3 justify-content-center text-center">
+                <h1 className="h1 flex-fill">{props.title}</h1>
+                <p className="h4 flex-fill">{props.subtitle}</p>
+            </div>
         </div>
     );
 }
@@ -19,9 +20,8 @@ const Dropdown = (props) => {
 
     return(
         <div>
-            <label htmlFor={props.id}>{props.label}</label>
-            <select id={props.id} onChange={props.onChange}>
-                <option value="" selected disabled>{props.defaultText}</option>  
+            <select className="form-select" id={props.id} onChange={props.onChange}>
+                <option value="" selected>{props.defaultText}</option>  
                 {/* Generate Option List */}
                 {props.list.map((listItem, i) => {
                     // for value, specify which data should be used by using valueField prop
@@ -38,9 +38,9 @@ const TextInput = (props) => {
     // Props: id, label, minlength, maxlength, onChange
 
     return (
-        <div>
+        <div className="form-floating">
+            <input type="text" className="form-control" placeholder={props.label} id={props.id} value={props.value} minLength={props.minlength} maxLength={props.maxlength} onChange={props.onChange}/>
             <label htmlFor={props.id}>{props.label}</label>
-            <input type="text" id={props.id} value={props.value} minLength={props.minlength} maxLength={props.maxlength} onChange={props.onChange}/>
         </div>
     );
 }
@@ -52,10 +52,15 @@ const SubmitButton = (props) => {
 
 
     return(
-        <div>
-            <label htmlFor={props.id}></label>
-            <button id={props.id} onClick={props.onClick}>{props.buttonText}</button>
+        <div className="">
+            <button className="btn btn-primary m-1" id={props.id} onClick={props.onClick}>{props.buttonText}</button>
         </div>
+    );
+}
+
+const HorizonalLine = () => {
+    return (
+        <p className="m-1">⎯⎯⎯⎯⎯⎯</p>
     );
 }
 
@@ -63,7 +68,8 @@ const SubmitButton = (props) => {
 const SelectCountryAndStateForm = (props) => {
 
     return (
-            <div>
+            <div className="container d-flex flex-column gap-1 bg-">
+                <h2>Select a Country and State</h2>
                 <Dropdown 
                     id="country-dropdown" 
                     label="Country:" 
@@ -130,7 +136,7 @@ const NewCountryForm = (props) => {
 
     // Render
     return (
-        <div id="add-new-country">
+        <div className="container d-flex flex-column gap-1">
                 <h2>Add a New Country</h2>
                 <TextInput 
                     id="newCountryName"
@@ -151,7 +157,7 @@ const NewCountryForm = (props) => {
                         setNewCountryCode(event.target.value);
                     }}
                 />
-                <SubmitButton 
+                <SubmitButton
                     id="submit-country"
                     buttonText="Submit"
                     onClick={handleSubmit}
@@ -202,8 +208,7 @@ const NewStateForm = (props) => {
     }
 
     return (
-        <div id="add-new-state">
-
+        <div className="container d-flex flex-column gap-1">
             <h2>Add a New State</h2>
             <TextInput 
                 id="newStateName"
@@ -279,18 +284,20 @@ const App = () => {
     }
 
     const refreshStates = async (countryCode) => {
-        var response = await fetch(`http://127.0.0.1:8000/api/countries/${countryCode}/states`);
+        if (countryCode != null && countryCode != undefined && countryCode != ""){
+           
+            var response = await fetch(`http://127.0.0.1:8000/api/countries/${countryCode}/states`);
             if (response.ok){
                 var data = await response.json();
                 data.sort((a, b) => (a.name > b.name) ? 1 : -1);
                 setCurrentStates(data);
-            } else {
-                alert("Could not retrieve states for selected country. Please try again.");
-            }
+            } else { alert("Error fetching states"); }
+
+        }
     }
 
     return (
-        <div className="container">
+        <div className="container p-0 pb-2 bg-primary-subtle d-flex flex-column justify-content-evenly border border-primary border-2 rounded gap-3 position-absolute top-50 start-50 translate-middle">
             <Header 
                 title="Countries and States Project...in React!"
                 subtitle="An exercise using React, API calls, and state management. Developed by Sean Rowan"
@@ -301,9 +308,11 @@ const App = () => {
                 refreshStates={refreshStates}
                 setCurrentCountryCode={setCurrentCountryCode}
             />
+            <hr className="m-0" />
             <NewCountryForm 
                 refreshCountries={refreshCountries}
             />
+            <hr className="m-0" />
             <NewStateForm 
                 countries={allCountries}
                 currentCountryCode={currentCountryCode}
