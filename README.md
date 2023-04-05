@@ -1,4 +1,4 @@
-# Countries and States
+# Welcome to GeoLink (Developed by Sean Rowan)
 This project features a single-page website that allows the user to interact with an external REST API that I created to get data about countries and states. The website is built using React.JS and BootStrap for the front end, and Django for the backend.
 
 ![UI]( https://github.com/SeanTheDev/CountriesAndStates-React/blob/main/UI.png?raw=true)
